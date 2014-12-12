@@ -32,6 +32,8 @@
 @property (strong, readwrite, nonatomic) UIImageView *backgroundImageView;
 @property (strong, readwrite, nonatomic) UIImageView *selectedBackgroundImageView;
 
+@property (strong, readwrite, nonatomic) UILabel *lblProsence;
+
 @end
 
 @implementation RETableViewCell
@@ -89,6 +91,13 @@
     if ([self.tableViewManager.style hasCustomSelectedBackgroundImage]) {
         [self addSelectedBackgroundImage];
     }
+    
+    self.lblProsence = [[UILabel alloc] initWithFrame:CGRectNull];
+    self.lblProsence.textColor = [UIColor redColor];
+    self.lblProsence.backgroundColor = [UIColor clearColor];
+    self.lblProsence.text = @"*";
+    self.lblProsence.font = [UIFont systemFontOfSize:20.f];
+    [self.contentView addSubview:self.lblProsence];
 }
 
 - (void)cellWillAppear
@@ -114,6 +123,12 @@
     }
     if (self.textLabel.text.length == 0)
         self.textLabel.text = @" ";
+    
+    if ([self.item isKindOfClass:[RETableViewItem class]] && [self.item.validators containsObject:@"presence"]) {
+        self.lblProsence.alpha = 1.f;
+    } else {
+        self.lblProsence.alpha = 0.f;
+    }
 }
 
 - (void)cellDidDisappear
@@ -132,14 +147,21 @@
     contentFrame.size.width = contentFrame.size.width - self.section.style.contentViewMargin * 2;
     self.contentView.frame = contentFrame;
     
+    // 非空标识
+    CGFloat xOffSet = self.section.style.contentViewMargin + 4;
+    if ([self.item isKindOfClass:[RETableViewItem class]] && [self.item.validators containsObject:@"presence"]) {
+        self.lblProsence.frame = CGRectMake(xOffSet, (contentFrame.size.height - 6) / 2, 8.f, 15.f);
+        xOffSet += 10.f;
+    }
+    
     // iOS 7 textLabel margin fix
     //
-    if (self.section.style.contentViewMargin > 0) {
+    if (self.section.style.contentViewMargin > 0 || ([self.item isKindOfClass:[RETableViewItem class]] && [self.item.validators containsObject:@"presence"])) {
         if (self.imageView.image) {
-            self.imageView.frame = CGRectMake(self.section.style.contentViewMargin, self.imageView.frame.origin.y, self.imageView.frame.size.width, self.imageView.frame.size.height);
-            self.textLabel.frame = CGRectMake(self.section.style.contentViewMargin + self.imageView.frame.size.width + 15.0, self.textLabel.frame.origin.y, self.textLabel.frame.size.width, self.textLabel.frame.size.height);
+            self.imageView.frame = CGRectMake(xOffSet, self.imageView.frame.origin.y, self.imageView.frame.size.width, self.imageView.frame.size.height);
+            self.textLabel.frame = CGRectMake(xOffSet + self.imageView.frame.size.width + 15.0, self.textLabel.frame.origin.y, self.textLabel.frame.size.width, self.textLabel.frame.size.height);
         } else {
-            self.textLabel.frame = CGRectMake(self.section.style.contentViewMargin, self.textLabel.frame.origin.y, self.textLabel.frame.size.width, self.textLabel.frame.size.height);
+            self.textLabel.frame = CGRectMake(xOffSet, self.textLabel.frame.origin.y, self.textLabel.frame.size.width, self.textLabel.frame.size.height);
         }
     }
     
